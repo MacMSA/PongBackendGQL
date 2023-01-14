@@ -1,0 +1,8 @@
+{
+  "name": "PongBackendGQL",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/MacMSA/PongBackendGQL.git",
+  "author": "Muhammad Danyal Afzal <67021862+dafzal231@users.noreply.github.com>",
+  "license": "MIT"
+}
