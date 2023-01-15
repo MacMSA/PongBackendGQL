@@ -1,7 +1,7 @@
 import {pre, prop, getModelForClass} from "@typegoose/typegoose"
 import bcrypt from "bcrypt"
 import {Field, InputType, ObjectType, ID } from "type-graphql"
-import { IsEmail, MaxLength, MinLength } from "class-validator";
+import { isEmail, IsEmail, MaxLength, MinLength } from "class-validator";
 import { SchemaDefinitionNode } from "graphql";
 import { Schema } from "mongoose";
 

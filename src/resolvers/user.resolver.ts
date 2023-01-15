@@ -33,12 +33,18 @@ export default class UserResolver {
           return new AuthPayLoad({id: user._id})
     }
 
-    @Query(returns => AuthPayLoad)
+    @Query(returns => AuthPayLoad )
     async login(
         @Arg("username") user: string,
         @Arg("password") pass: string,
     ){
 
-    }
+        const possibleUser = await UserModel.findOne({username: user})
 
+        if (!possibleUser || possibleUser.password === pass ){
+            return new Error("Username or password is incorrect")
+        }
+        
+        return new AuthPayLoad({id: possibleUser._id})
+    }
 }
