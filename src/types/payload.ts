@@ -1,4 +1,4 @@
-import { Field, ObjectType } from "type-graphql"
+import { Field, ObjectType, AuthChecker } from "type-graphql"
 import jwt from "jsonwebtoken";
 import config from "config"
 
@@ -11,11 +11,12 @@ export class AuthPayLoad {
     token: string
 
     private createJWT = (payload: string | object | Buffer ) => {
-        return jwt.sign(payload, secret, {
-          expiresIn: expiresIn
-        })
-      }
-      constructor(payload: string | object | Buffer){
-        this.token = this.createJWT(payload);
-      }
+      return jwt.sign(payload, secret, {
+        expiresIn: expiresIn
+      })
+    }
+  
+    constructor(payload: string | object | Buffer){
+      this.token = this.createJWT(payload);
+    }
 }

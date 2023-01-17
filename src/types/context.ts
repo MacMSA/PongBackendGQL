@@ -1,6 +1,7 @@
-import {User} from "../schema/user.schema"
+import { Request, Response } from "express";
+import { User } from "../schema/user.schema";
 
 export interface Context {
-    user: User,
-    debug: any
+  debug: string
+  user: User | null
 }
