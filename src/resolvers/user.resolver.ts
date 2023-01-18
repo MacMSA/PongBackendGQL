@@ -24,8 +24,9 @@ export default class UserResolver {
             lastname,
           })
 
-          console.log(user);
+        //   console.log(user);
           const payload = new AuthPayLoad({id: user._id})
+          return payload
     }
 
     @Query(returns => AuthPayLoad )
@@ -36,10 +37,9 @@ export default class UserResolver {
     ){
         const possibleUser = await UserModel.findOne({username: username})
 
-        if (!possibleUser || possibleUser.password !== password ){
-            return new Error("Username or password is incorrect")
-        }
-        else if(!(await possibleUser.checkPasswords(password))){
+        console.log(possibleUser)
+
+        if (!possibleUser || !(await possibleUser.checkPasswords(password))){
             return new Error("Username or password is incorrect")
         }
 
@@ -62,9 +62,7 @@ export default class UserResolver {
     @Authorized()
     @Query(returns => User)
     async me(@Ctx() context: Context){
-        return{
-            firstname: "Danyal"
-        }
+        return context.user
     }
     
 }
