@@ -39,7 +39,7 @@ async function bootup() {
         else{
           context = {
             debug: "",
-            user: new User()
+            user: null
           }
         }
 
@@ -65,7 +65,7 @@ async function bootup() {
         }
         context.debug = payload.id
 
-        // console.log(context)
+        console.log(context)
         
         return context;
       },

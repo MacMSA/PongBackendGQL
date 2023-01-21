@@ -70,6 +70,9 @@ export default class UserResolver {
     @Authorized()
     @Mutation(returns => AuthPayLoad)
     async addChallenge(@Ctx() context: Context, @Arg('user2') u2: String){
+        if (!context.user){
+            return new Error("no user logged in")
+        }
         let id1 = context.user._id.toString()
         let id2 = u2
 
@@ -106,6 +109,10 @@ export default class UserResolver {
     @Authorized()
     @Query(returns => Challenge)
     async getOneChallengeForUser(@Ctx() context: Context, @Arg('user2') u2: String){
+
+        if (!context.user){
+            return new Error("no user logged in")
+        }
         let id1 = context.user._id.toString()
         let id2 = u2
 
@@ -143,6 +150,10 @@ export default class UserResolver {
     @Authorized()
     @Query(returns => [Challenge])
     async getAllChallengeForUser(@Ctx() context: Context){
+
+        if (!context.user){
+            return new Error("no user logged in")
+        }
         let id1 = context.user._id.toString()
 
         const possibleChallenges = await ChallengeModel.find({$or: [{idUser1: id1}, {idUser2: id1}]})
@@ -157,5 +168,24 @@ export default class UserResolver {
 
         return await Promise.all(challengesPromise)
     }
+
+    @Authorized()
+    @Query(returns => [Challenge])
+    async getAllChallenge(@Ctx() context: Context){
+
+        const possibleChallenges = await ChallengeModel.find()
+
+        if(!possibleChallenges){
+            return new Error("No challenges")
+        }
+
+        const challengesPromise = possibleChallenges.map((challenge)=>{
+            return this.convertChallenge(challenge.idUser1, challenge.idUser2)
+        })
+
+        return await Promise.all(challengesPromise)
+    }
+
+
     
 }

@@ -29,6 +29,7 @@ type Mutation {
 }
 
 type Query {
+  getAllChallenge: [Challenge!]!
   getAllChallengeForUser: [Challenge!]!
   getOneChallengeForUser(user2: String!): Challenge!
   login(password: String!, username: String!): AuthPayLoad!
