@@ -13,7 +13,7 @@ import {
 import UserResolver from "./resolvers/user.resolver";
 import { connectToMongo } from "./utils/connectMongo";
 import {verify} from "jsonwebtoken"
-import { UserModel } from "./schema/user.schema";
+import { User, UserModel } from "./schema/user.schema";
 import { authChecker } from "./utils/auth";
 
 async function bootup() {
@@ -24,6 +24,7 @@ async function bootup() {
         emitSchemaFile: {
             path: __dirname + "/schema.gql"
           },
+
     })
 
     const app = express();
@@ -38,7 +39,7 @@ async function bootup() {
         else{
           context = {
             debug: "",
-            user: null
+            user: new User()
           }
         }
 
@@ -59,7 +60,9 @@ async function bootup() {
         )
         const user = await UserModel.findById(payload.id);
 
-        context.user = user
+        if (user){
+          context.user = user
+        }
         context.debug = payload.id
 
         // console.log(context)

@@ -109,6 +109,13 @@ export default class UserResolver {
         let id1 = context.user._id.toString()
         let id2 = u2
 
+        return await this.convertChallenge(id1, id2)
+    }
+
+    async convertChallenge(userID1: String, userID2: String){
+        let id1 = userID1
+        let id2 = userID2
+
         if(id1 === id2){
             return new Error("Can not find a challenge against yourself")
         }
@@ -119,8 +126,19 @@ export default class UserResolver {
             return new Error("Challenge not created")
         }
 
-        return possibleChallenge
+        const user1 = await UserModel.findById(possibleChallenge.idUser1)
+        const user2 = await UserModel.findById(possibleChallenge.idUser2)
+
+        if(user1 && user2){
+            return new Challenge(
+                possibleChallenge.idUser1, possibleChallenge.idUser2, user1, user2
+            )
+        }
+        else{
+            return new Error("No user of these ids")
+        }
     }
+    
 
     @Authorized()
     @Query(returns => [Challenge])
@@ -133,7 +151,11 @@ export default class UserResolver {
             return new Error("No challenges for user")
         }
 
-        return possibleChallenges
+        const challengesPromise = possibleChallenges.map((challenge)=>{
+            return this.convertChallenge(challenge.idUser1, challenge.idUser2)
+        })
+
+        return await Promise.all(challengesPromise)
     }
     
 }

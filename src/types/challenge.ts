@@ -26,11 +26,9 @@ export class Challenge {
     resolved: Boolean
 
     @Field(returns => User)
-    @prop()
     user1: User
 
     @Field(returns => User)
-    @prop()
     user2: User 
   
     constructor(id1:String, id2: String, user1: User, user2: User){
@@ -41,7 +39,6 @@ export class Challenge {
         this.user1 = user1
         this.user2 = user2
     }
-    
 }
 
 export const ChallengeModel = getModelForClass<typeof Challenge>(Challenge)
