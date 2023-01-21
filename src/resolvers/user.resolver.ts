@@ -85,7 +85,13 @@ export default class UserResolver {
 
         if(user1 && user2){
 
-            const existing = await ChallengeModel.findOne({$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]})
+            const existing = await ChallengeModel.findOne({
+                $and : [
+                    {$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]},
+                    { resolved: false }
+                ]
+            
+            })
 
             if(existing){
                 return new Error("Challenge already created")
@@ -128,8 +134,13 @@ export default class UserResolver {
             return new Error("Can not find a challenge against yourself")
         }
 
-        const possibleChallenge = await ChallengeModel.findOne({idUser1: id1, idUser2: id2})
-
+        const possibleChallenge = await ChallengeModel.findOne({
+            $and : [
+                ({idUser1: id1, idUser2: id2}),
+                { resolved: false },
+            ]
+        
+        })
 
         if(!possibleChallenge){
             return new Error("Challenge not created")
@@ -158,7 +169,13 @@ export default class UserResolver {
         }
         let id1 = context.user._id.toString()
 
-        const possibleChallenges = await ChallengeModel.find({$or: [{idUser1: id1}, {idUser2: id1}]})
+        const possibleChallenges = await ChallengeModel.find({
+            $and : [
+                {$or: [{idUser1: id1}, {idUser2: id1}]},
+                { resolved: false }
+            ]
+        
+        })
 
         if(!possibleChallenges){
             return new Error("No challenges for user")
@@ -175,7 +192,7 @@ export default class UserResolver {
     @Query(returns => [Challenge])
     async getAllChallenge(@Ctx() context: Context){
 
-        const possibleChallenges = await ChallengeModel.find()
+        const possibleChallenges = await ChallengeModel.find({resolved:false})
 
         if(!possibleChallenges){
             return new Error("No challenges")
@@ -188,6 +205,29 @@ export default class UserResolver {
         return await Promise.all(challengesPromise)
     }
 
+    @Authorized()
+    @Mutation(returns => AuthPayLoad)
+    async resolveChallenge(@Ctx() context: Context, @Arg('user2') u2: String){
+        if (!context.user){
+            return new Error("no user logged in")
+        }
+        let id1 = context.user._id.toString()
+        let id2 = u2
+
+        const challenge =  await ChallengeModel.findOneAndUpdate({
+            $and : [
+                {$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]},
+                { resolved: false }
+            ]
+        
+        }, {resolved:true}, {returnNewDocument:true})
+        
+        
+        console.log(challenge)
+
+        return new AuthPayLoad({id: context.user._id})
+        
+    }
 
     
 }
