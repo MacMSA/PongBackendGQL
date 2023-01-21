@@ -7,12 +7,30 @@ type AuthPayLoad {
   token: String!
 }
 
+type Challenge {
+  _id: ID!
+  createdAt: DateTime!
+  idUser1: String!
+  idUser2: String!
+  resolved: Boolean!
+  user1: User!
+  user2: User!
+}
+
+"""
+The javascript `Date` as string. Type represents date and time as the ISO Date string.
+"""
+scalar DateTime
+
 type Mutation {
+  addChallenge(user2: String!): AuthPayLoad!
   forgotPassword(username: String!): String!
   register(firstname: String!, lastname: String!, password: String!, username: String!): AuthPayLoad!
 }
 
 type Query {
+  getAllChallengeForUser: [Challenge!]!
+  getOneChallengeForUser(user2: String!): Challenge!
   login(password: String!, username: String!): AuthPayLoad!
   me: User!
 }

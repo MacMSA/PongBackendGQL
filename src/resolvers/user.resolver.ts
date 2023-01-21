@@ -2,6 +2,8 @@ import { Arg, Ctx, Mutation, Query, Resolver, Authorized } from "type-graphql";
 import { User, UserModel } from "../schema/user.schema";
 import { Context } from "../types/context";
 import { AuthPayLoad } from "../types/payload";
+import { Challenge, ChallengeModel } from "../types/challenge";
+import {Schema} from "mongoose";
 
 @Resolver()
 export default class UserResolver {
@@ -63,6 +65,75 @@ export default class UserResolver {
     @Query(returns => User)
     async me(@Ctx() context: Context){
         return context.user
+    }
+
+    @Authorized()
+    @Mutation(returns => AuthPayLoad)
+    async addChallenge(@Ctx() context: Context, @Arg('user2') u2: String){
+        let id1 = context.user._id.toString()
+        let id2 = u2
+
+        if(id1 === id2){
+            return new Error("Can not choose to add challenge against yourself")
+        }
+
+        const user1 = await UserModel.findById(id1)
+        const user2 = await UserModel.findById(id2)
+
+        if(user1 && user2){
+
+            const existing = await ChallengeModel.findOne({idUser1: id1, idUser2: id2})
+            if(existing){
+                return new Error("Challenge already created")
+            }
+
+            const challenge = new Challenge(id1, id2, user1, user2)
+            ChallengeModel.create({
+                idUser1: challenge.idUser1,
+                idUser2: challenge.idUser2,
+                createdAt: challenge.createdAt,
+                user1: challenge.user1,
+                user2: challenge.user2,
+                resolved: challenge.resolved
+            })
+            return new AuthPayLoad({id: context.user._id})
+        }
+        else{
+            return new Error("No user of these ids")
+        }
+    }
+
+    @Authorized()
+    @Query(returns => Challenge)
+    async getOneChallengeForUser(@Ctx() context: Context, @Arg('user2') u2: String){
+        let id1 = context.user._id.toString()
+        let id2 = u2
+
+        if(id1 === id2){
+            return new Error("Can not find a challenge against yourself")
+        }
+
+        const possibleChallenge = await ChallengeModel.findOne({idUser1: id1, idUser2: id2})
+
+        if(!possibleChallenge){
+            return new Error("Challenge not created")
+        }
+
+        return possibleChallenge
+    }
+
+    @Authorized()
+    @Query(returns => [Challenge])
+    async getAllChallengeForUser(@Ctx() context: Context){
+        let id1 = context.user._id.toString()
+
+        const possibleChallenges = await ChallengeModel.find({$or: [{idUser1: id1}, {idUser2: id1}]})
+
+        if(!possibleChallenges){
+            return new Error("No challenges for user")
+        }
+
+        return possibleChallenges
     }
     
 }

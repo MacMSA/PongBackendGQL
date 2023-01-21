@@ -28,7 +28,6 @@ export class User {
     @prop({required: true})
     lastname: string;
 
-
     @MinLength(6, {
         message: "username must be at least 6 characters long",
       })
