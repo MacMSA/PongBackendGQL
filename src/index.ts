@@ -65,7 +65,7 @@ async function bootup() {
         }
         context.debug = payload.id
 
-        console.log(context)
+        // console.log(context)
         
         return context;
       },

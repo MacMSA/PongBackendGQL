@@ -85,7 +85,8 @@ export default class UserResolver {
 
         if(user1 && user2){
 
-            const existing = await ChallengeModel.findOne({idUser1: id1, idUser2: id2})
+            const existing = await ChallengeModel.findOne({$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]})
+
             if(existing){
                 return new Error("Challenge already created")
             }
@@ -128,6 +129,7 @@ export default class UserResolver {
         }
 
         const possibleChallenge = await ChallengeModel.findOne({idUser1: id1, idUser2: id2})
+
 
         if(!possibleChallenge){
             return new Error("Challenge not created")
