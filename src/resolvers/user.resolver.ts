@@ -229,5 +229,18 @@ export default class UserResolver {
         
     }
 
+    // @Authorized()
+    // @Query(returns => [User])
+    // async allUsers(@Ctx() context: Context){
+    //     const users = await UserModel.find()
+
+    //     const userPromise = users.map((challenge)=>{
+    //         return this.convertChallenge(challenge.idUser1, challenge.idUser2)
+    //     })
+
+    //     return await Promise.all(challengesPromise)
+        
+    // }
+
     
 }
