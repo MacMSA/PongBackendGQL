@@ -30,6 +30,14 @@ export class Challenge {
 
     @Field(returns => User)
     user2: User 
+
+    @Field(returns => Boolean)
+    @prop()
+    u1res: Boolean
+
+    @Field(returns => Boolean)
+    @prop()
+    u2res: Boolean
   
     constructor(id1:String, id2: String, user1: User, user2: User){
         this.idUser1 = id1
@@ -38,7 +46,10 @@ export class Challenge {
         this.resolved = false
         this.user1 = user1
         this.user2 = user2
+        this.u1res = true
+        this.u2res = false
     }
+
 }
 
 export const ChallengeModel = getModelForClass<typeof Challenge>(Challenge)

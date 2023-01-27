@@ -13,6 +13,8 @@ type Challenge {
   idUser1: String!
   idUser2: String!
   resolved: Boolean!
+  u1res: Boolean!
+  u2res: Boolean!
   user1: User!
   user2: User!
 }
@@ -24,6 +26,7 @@ scalar DateTime
 
 type Mutation {
   addChallenge(user2: String!): AuthPayLoad!
+  addChallengerResponse(response: String!, user2: String!): AuthPayLoad!
   forgotPassword(username: String!): String!
   register(firstname: String!, lastname: String!, password: String!, username: String!): AuthPayLoad!
   resolveChallenge(user2: String!): AuthPayLoad!
@@ -31,7 +34,9 @@ type Mutation {
 
 type Query {
   getAllChallenge: [Challenge!]!
-  getAllChallengeForUser: [Challenge!]!
+  getAllChallenges: [Challenge!]!
+  getAllRequests: [Challenge!]!
+  getAllUsers: [User!]!
   getOneChallengeForUser(user2: String!): Challenge!
   login(password: String!, username: String!): AuthPayLoad!
   me: User!

@@ -8,6 +8,43 @@ import {Schema} from "mongoose";
 @Resolver()
 export default class UserResolver {
 
+    async convertChallenge(userID1: String, userID2: String){
+        let id1 = userID1
+        let id2 = userID2
+
+        if(id1 === id2){
+            return new Error("Can not find a challenge against yourself")
+        }
+
+        const possibleChallenge = await ChallengeModel.findOne({
+            $and : [
+                ({idUser1: id1, idUser2: id2}),
+                { resolved: false },
+            ]
+        
+        })
+
+        if(!possibleChallenge){
+            return new Error("Challenge not created")
+        }
+
+        const user1 = await UserModel.findById(possibleChallenge.idUser1)
+        const user2 = await UserModel.findById(possibleChallenge.idUser2)
+
+        if(user1 && user2){
+            return new Challenge(
+                possibleChallenge.idUser1, possibleChallenge.idUser2, user1, user2
+            )
+        }
+        else{
+            return new Error("No user of these ids")
+        }
+    }
+
+    async checkResponse(idUser1: String, idUser2: String){
+
+    }
+
     @Mutation(returns => AuthPayLoad)
     async register(
         @Arg("firstname") firstname: string,
@@ -126,43 +163,26 @@ export default class UserResolver {
         return await this.convertChallenge(id1, id2)
     }
 
-    async convertChallenge(userID1: String, userID2: String){
-        let id1 = userID1
-        let id2 = userID2
+    @Authorized()
+    @Query(returns => [Challenge])
+    async getAllChallenge(@Ctx() context: Context){
 
-        if(id1 === id2){
-            return new Error("Can not find a challenge against yourself")
+        const possibleChallenges = await ChallengeModel.find({resolved:false})
+
+        if(!possibleChallenges){
+            return new Error("No challenges")
         }
 
-        const possibleChallenge = await ChallengeModel.findOne({
-            $and : [
-                ({idUser1: id1, idUser2: id2}),
-                { resolved: false },
-            ]
-        
+        const challengesPromise = possibleChallenges.map((challenge)=>{
+            return this.convertChallenge(challenge.idUser1, challenge.idUser2)
         })
 
-        if(!possibleChallenge){
-            return new Error("Challenge not created")
-        }
-
-        const user1 = await UserModel.findById(possibleChallenge.idUser1)
-        const user2 = await UserModel.findById(possibleChallenge.idUser2)
-
-        if(user1 && user2){
-            return new Challenge(
-                possibleChallenge.idUser1, possibleChallenge.idUser2, user1, user2
-            )
-        }
-        else{
-            return new Error("No user of these ids")
-        }
+        return await Promise.all(challengesPromise)
     }
-    
 
     @Authorized()
     @Query(returns => [Challenge])
-    async getAllChallengeForUser(@Ctx() context: Context){
+    async getAllRequests(@Ctx() context: Context){
 
         if (!context.user){
             return new Error("no user logged in")
@@ -172,7 +192,7 @@ export default class UserResolver {
         const possibleChallenges = await ChallengeModel.find({
             $and : [
                 {$or: [{idUser1: id1}, {idUser2: id1}]},
-                { resolved: false }
+                { resolved: false, u2res: false},
             ]
         
         })
@@ -190,12 +210,23 @@ export default class UserResolver {
 
     @Authorized()
     @Query(returns => [Challenge])
-    async getAllChallenge(@Ctx() context: Context){
+    async getAllChallenges(@Ctx() context: Context){
 
-        const possibleChallenges = await ChallengeModel.find({resolved:false})
+        if (!context.user){
+            return new Error("no user logged in")
+        }
+        let id1 = context.user._id.toString()
+
+        const possibleChallenges = await ChallengeModel.find({
+            $and : [
+                {$or: [{idUser1: id1}, {idUser2: id1}]},
+                { resolved: false, u2res: true}
+            ]
+        
+        })
 
         if(!possibleChallenges){
-            return new Error("No challenges")
+            return new Error("No challenges for user")
         }
 
         const challengesPromise = possibleChallenges.map((challenge)=>{
@@ -229,18 +260,27 @@ export default class UserResolver {
         
     }
 
-    // @Authorized()
-    // @Query(returns => [User])
-    // async allUsers(@Ctx() context: Context){
-    //     const users = await UserModel.find()
+    @Authorized()
+    @Query(returns => [User])
+    async getAllUsers(@Ctx() context: Context){
+        const users = await UserModel.find()
+        return await Promise.all(users)
+    }
 
-    //     const userPromise = users.map((challenge)=>{
-    //         return this.convertChallenge(challenge.idUser1, challenge.idUser2)
-    //     })
+    @Authorized()
+    @Mutation(returns => AuthPayLoad)
+    async addChallengerResponse(@Ctx() context: Context, @Arg("user2") u2: String, @Arg('response') response: String){
+        if (!context.user){
+            return new Error("no user logged in")
+        }
 
-    //     return await Promise.all(challengesPromise)
-        
-    // }
+        const u1 = context.user._id.toString()
 
+        const challenge = await ChallengeModel.findOneAndUpdate({idUser1: u1, idUser2: u2}, {u2res: true})
+
+        console.log(challenge)
+
+        return new AuthPayLoad({id: context.user?._id})
+    }
     
 }
