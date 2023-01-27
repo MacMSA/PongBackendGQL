@@ -41,10 +41,6 @@ export default class UserResolver {
         }
     }
 
-    async checkResponse(idUser1: String, idUser2: String){
-
-    }
-
     @Mutation(returns => AuthPayLoad)
     async register(
         @Arg("firstname") firstname: string,
@@ -125,7 +121,7 @@ export default class UserResolver {
             const existing = await ChallengeModel.findOne({
                 $and : [
                     {$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]},
-                    { resolved: false }
+                    { resolved: false, u2res: false}
                 ]
             
             })
@@ -150,35 +146,37 @@ export default class UserResolver {
         }
     }
 
-    @Authorized()
-    @Query(returns => Challenge)
-    async getOneChallengeForUser(@Ctx() context: Context, @Arg('user2') u2: String){
+    // Probably don't need this, will delete later
+    // @Authorized()
+    // @Query(returns => Challenge)
+    // async getOneChallengeForUser(@Ctx() context: Context, @Arg('user2') u2: String){
 
-        if (!context.user){
-            return new Error("no user logged in")
-        }
-        let id1 = context.user._id.toString()
-        let id2 = u2
+    //     if (!context.user){
+    //         return new Error("no user logged in")
+    //     }
+    //     let id1 = context.user._id.toString()
+    //     let id2 = u2
 
-        return await this.convertChallenge(id1, id2)
-    }
+    //     return await this.convertChallenge(id1, id2)
+    // }
 
-    @Authorized()
-    @Query(returns => [Challenge])
-    async getAllChallenge(@Ctx() context: Context){
+    // all challenges, if they have started or are only requests
+    // @Authorized()
+    // @Query(returns => [Challenge])
+    // async getEveryChallenge(@Ctx() context: Context){
 
-        const possibleChallenges = await ChallengeModel.find({resolved:false})
+    //     const possibleChallenges = await ChallengeModel.find({resolved:false})
 
-        if(!possibleChallenges){
-            return new Error("No challenges")
-        }
+    //     if(!possibleChallenges){
+    //         return new Error("No challenges")
+    //     }
 
-        const challengesPromise = possibleChallenges.map((challenge)=>{
-            return this.convertChallenge(challenge.idUser1, challenge.idUser2)
-        })
+    //     const challengesPromise = possibleChallenges.map((challenge)=>{
+    //         return this.convertChallenge(challenge.idUser1, challenge.idUser2)
+    //     })
 
-        return await Promise.all(challengesPromise)
-    }
+    //     return await Promise.all(challengesPromise)
+    // }
 
     @Authorized()
     @Query(returns => [Challenge])
@@ -238,37 +236,6 @@ export default class UserResolver {
 
     @Authorized()
     @Mutation(returns => AuthPayLoad)
-    async resolveChallenge(@Ctx() context: Context, @Arg('user2') u2: String){
-        if (!context.user){
-            return new Error("no user logged in")
-        }
-        let id1 = context.user._id.toString()
-        let id2 = u2
-
-        const challenge =  await ChallengeModel.findOneAndUpdate({
-            $and : [
-                {$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]},
-                { resolved: false }
-            ]
-        
-        }, {resolved:true}, {returnNewDocument:true})
-        
-        
-        console.log(challenge)
-
-        return new AuthPayLoad({id: context.user._id})
-        
-    }
-
-    @Authorized()
-    @Query(returns => [User])
-    async getAllUsers(@Ctx() context: Context){
-        const users = await UserModel.find()
-        return await Promise.all(users)
-    }
-
-    @Authorized()
-    @Mutation(returns => AuthPayLoad)
     async addChallengerResponse(@Ctx() context: Context, @Arg("user2") u2: String, @Arg('response') response: String){
         if (!context.user){
             return new Error("no user logged in")
@@ -281,6 +248,35 @@ export default class UserResolver {
         console.log(challenge)
 
         return new AuthPayLoad({id: context.user?._id})
+    }
+
+    @Authorized()
+    @Mutation(returns => AuthPayLoad)
+    async resolveChallenge(@Ctx() context: Context, @Arg('user2') u2: String){
+        if (!context.user){
+            return new Error("no user logged in")
+        }
+        let id1 = context.user._id.toString()
+        let id2 = u2
+
+        const challenge =  await ChallengeModel.findOneAndUpdate({
+            $and : [
+                {$or: [{idUser1: id1, idUser2: id2}, {idUser2: id1, idUser1: id2}]},
+                { resolved: false , u2res: true}
+            ]
+        
+        }, {resolved:true}, {returnNewDocument:true})
+        
+        console.log(challenge)
+
+        return new AuthPayLoad({id: context.user._id})
+    }
+
+    @Authorized()
+    @Query(returns => [User])
+    async getAllUsers(@Ctx() context: Context){
+        const users = await UserModel.find()
+        return await Promise.all(users)
     }
     
 }
